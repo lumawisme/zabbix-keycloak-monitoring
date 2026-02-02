@@ -150,4 +150,5 @@ Feel free to open an issue or submit a pull request.
 - MIT License
 ---
 ## ⭐ Credits
-Created and maintained by Lu Maw.Inspired by Keycloak observability SLIs and real-world production usage.
+Created and maintained by Lu Maw.
+Inspired by Keycloak observability SLIs and real-world production usage.
