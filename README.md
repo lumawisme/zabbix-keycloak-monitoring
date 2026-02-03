@@ -74,8 +74,6 @@ This template comes with High Priority (Disaster) alerts to ensure immediate vis
 
 Keycloak does not expose metrics by default. You must enable them via CLI flags or Environment Variables.
 
-#### CLI Flags
-
 When starting Keycloak:
 
 ```bash
