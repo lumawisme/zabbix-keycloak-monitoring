@@ -1,112 +1,115 @@
 # Zabbix Template – Keycloak by HTTP
 
-A comprehensive **Zabbix HTTP Agent template** for monitoring **Keycloak Identity and Access Management** using the built-in `/health` and `/metrics` endpoints.
+A comprehensive, efficient Zabbix HTTP Agent template for monitoring Keycloak Identity and Access Management.
 
-This template provides deep visibility into Keycloak health, database performance, JVM behavior, HTTP traffic, and login service-level indicators (SLIs).
-
-**Tested with Zabbix 7.2+** and modern Keycloak distributions (Quarkus).
+This template utilizes Keycloak's built-in observability endpoints (/health and /metrics) to provide deep visibility into system health, database connection pools (Agroal), JVM performance, and critical Login Service Level Indicators (SLIs).
 
 ---
 
-## 📊 Monitored Components
+## 🚀 Features
+
+Zero-Dependency: Uses Zabbix's native HTTP Agent. No external scripts or Zabbix Senders required.
+
+Efficient Data Collection: Utilizes a Master Item approach. Zabbix fetches the metrics payload once per minute, and all dependent items extract data from that single request, minimizing load on the Keycloak server.
+
+Production Ready: Includes pre-tuned triggers for database exhaustion, login latency, and system saturation.
+
+---
+
+## 🛠 Tested With
+- Keycloak 20+ (Quarkus) running on RHEL 8.9 (Ootpa)
+- Zabbix 7.2.1
+
+---
+
+## 📊 Monitored Metrics
 
 ### 🔍 Health & Availability
-* Keycloak health status (`/health`)
-* Metrics endpoint availability
-* Process uptime
-* Restart detection
+- Global Status: Application health check (/health).
+- Uptime: Process uptime tracking with automatic restart detection.
+- Service Reliability: Monitors the availability of the metrics endpoint itself.
 
 ### 🗄️ Database (Agroal)
-* Active connections
-* Available connections
-* Threads waiting for DB connections
-* Maximum DB blocking time
-* Connection pool utilization (%)
+- Connection Pool: Active, Available, and Awaiting connections.
+- Performance: Maximum blocking time (latency in acquiring a connection).
+- Utilization: Calculated percentage of pool usage.
 
 ### ☕ JVM Performance
-* JVM CPU load
-* Heap memory usage
-* Non-heap (Metaspace) memory usage
-* Garbage Collection pause time
-* Thread states (runnable, blocked, total)
+- Memory: Heap and Non-Heap (Metaspace) usage in Bytes.
+- CPU: Process-specific CPU load and System-wide CPU load.
+- Garbage Collection: Total GC pause time.
+- Threads: Runnable, Blocked, and Total thread counts.
 
 ### 🌐 HTTP & Login SLIs
-* Active HTTP requests
-* Login request rate
-* Login error rate
-* Login error ratio (%)
-* Maximum login response time
+Metrics specifically tuned to track user experience based on Keycloak's observability guide.
+- Traffic: Global Active HTTP requests.
+- Login Rates: Requests per second (RPS) to login flows.
+- Errors: Login error rate and calculated Error Ratio (%).
+- Latency: Maximum response time for login requests.
 
 ### 🧠 Cache (Infinispan)
-* Cache hit ratio (%)
+- Efficiency: Cache Hit Ratio %.
 
 ---
 
-## 🚨 Built-in Triggers
+## 🚨 Triggers & Alerts
 
-The template includes production-ready triggers, including:
+This template comes with High Priority (Disaster) alerts to ensure immediate visibility into critical failures.
 
-* **Critical:** Keycloak health check is DOWN
-* **Critical:** Database connection pool almost full (>90%)
-* **Critical:** Database threads waiting for connections
-* **Warning:** High database blocking time
-* **Warning:** High JVM CPU usage
-* **Warning:** JVM blocked threads detected
-* **SLI Violation:** High login error ratio (>5%)
-* **SLI Violation:** Slow login response time (>250ms)
-
-All triggers use stability windows to minimize alert noise.
+| Trigger Name | Threshold | Severity | Logic |
+| :--- | :--- | :--- | :--- |
+| **Keycloak Health Check is DOWN** | Status ≠ "UP" | **Disaster** | Immediate alert if `/health` fails. |
+| **Database Threads are Waiting** | Count > 0 | **Disaster** | Threads are queued; indicates DB pool exhaustion. |
+| **High Database Blocking Time** | > 1000ms | **Disaster** | It is taking >1s to acquire a DB connection. |
+| **DB Pool almost full** | > 90% | **Disaster** | Connection pool utilization is critical. |
+| **High Login Error Rate** | > 5% | **Disaster** | Over 5% of login attempts are failing (500 errors). |
+| **Login Response Time High** | > 250ms | **Disaster** | Login slowness detected. |
+| **High JVM CPU Load** | > 90% | **Disaster** | CPU is saturated. |
+| **JVM Blocked Threads** | > 2 | **Disaster** | Threads stuck waiting on locks. |
+| **Process has restarted** | Uptime < 10m | **Disaster** | Detects if the Keycloak service crashed/restarted. |
 
 ---
 
-## 🧩 Requirements
+## 🧩 Keycloak Configuration requirements
 
-### 1. Keycloak Configuration
-Keycloak must be configured to expose its observability endpoints.
-**Note:** This template is designed for the **Quarkus** distribution of Keycloak.
+Keycloak does not expose metrics by default. You must enable them via CLI flags or Environment Variables.
 
-You must start Keycloak with the following flags or environment variables.
+### CLI Flags
 
-**Option A: CLI Flags**
+When starting Keycloak:
+
 ```bash
-bin/kc.sh start \
+bin/kc.sh start-dev \
   --health-enabled=true \
   --metrics-enabled=true 
 ```
+This command starts Keycloak in development mode, which is optimized for local testing rather than production security.
 
-**Option B: Environment Variables (Docker/K8s)**
-```bash
-KC_HEALTH_ENABLED=true
-KC_METRICS_ENABLED=true
-```
-### 2. Verify Endpoints
-By default, Keycloak exposes these on the management port 9000.
-- Metrics: http://<your-ip>:9000/metrics
-- Health: http://<your-ip>:9000/health
+
+### 🔍 Verification
+Before installing the template, ensure you can access these URLs from your Zabbix Proxy/Server:
+- http://your-keycloak-ip:9000/health
+- http://your-keycloak-ip:9000/metrics
 
 ---
 
-## 📥 Installation
+## ⚙️ Zabbix Configuration
 
-Download the **template_keycloak_http.json** file from this repository.
+### 1. Import Template:
 
-Log in to your Zabbix Interface.
+- Go to **Data collection → Templates**.
+- Click **Import**.
+- Select **template_keycloak_http.json** and confirm.
 
-Go to **Data collection → Templates**.
+### 2. Add to Host:
 
-Click **Import** (top right).
+- Create or Edit a Host in Zabbix.
+- Add the Template App Keycloak by HTTP.
+- Ensure the Host Interface is set (Agent or SNMP interface is not strictly required, but Zabbix needs the IP/DNS to resolve {HOST.CONN}).
 
-Select the **JSON file** and click **Import**.
+### 3. Configure Macros (Optional):
 
----
-
-## ⚙️ Configuration
-
-Create or edit a Host in Zabbix for your Keycloak server.
-
-Link the template "Template App Keycloak by HTTP".
-
-Macros: This template uses the standard {HOST.CONN} macro to find your server. If your Keycloak uses a custom port or path, you can override these macros on the Host level:
+This template uses the standard {HOST.CONN} macro to find your server. If your Keycloak uses a custom port or path, you can override these macros on the Host level:
 
 | Macro                     | Default Value                     | Description                          |
 | ------------------------- | --------------------------------- | ------------------------------------ |
@@ -115,40 +118,19 @@ Macros: This template uses the standard {HOST.CONN} macro to find your server. I
 
 ---
 
-## 📈 Data Collection Model
-
-This template is designed for efficiency and scalability:
-
-Master Item: Uses a single HTTP Agent item to fetch /metrics once per minute.
-
-Dependent Items: All metrics are parsed from that single payload using PROMETHEUS_PATTERN.
-
-Calculated Items: Used for ratios (e.g., Error Rate %) and pool utilization.
-
-This design minimizes the HTTP load on both Zabbix and Keycloak.
-
----
-
-## 🛠 Tested With
-- Keycloak 20+ (Quarkus)
-- Zabbix 7.2
-- PostgreSQL / MySQL (Agroal connection pool)
-  
----
-
 ## 🤝 Contributing
 - Contributions are welcome!
-- New metrics or triggers
+- Bug reports
+- New metric suggestions
 - Threshold tuning
-- Dashboard ideas
-- Compatibility improvements
-- Feel free to open an issue or submit a pull request.
 
 ---
 
 ## 📄 License
 - MIT License
+  
 ---
+
 ## ⭐ Credits
 Created and maintained by Lu Maw.
-Inspired by Keycloak observability SLIs and real-world production usage.
+Inspired by Keycloak observability SLIs and production requirements.
