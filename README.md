@@ -8,11 +8,11 @@ This template utilizes Keycloak's built-in observability endpoints (/health and 
 
 ## 🚀 Features
 
-Zero-Dependency: Uses Zabbix's native HTTP Agent. No external scripts or Zabbix Senders required.
+- Zero-Dependency: Uses Zabbix's native HTTP Agent. No external scripts or Zabbix Senders required.
 
-Efficient Data Collection: Utilizes a Master Item approach. Zabbix fetches the metrics payload once per minute, and all dependent items extract data from that single request, minimizing load on the Keycloak server.
+- Efficient Data Collection: Utilizes a Master Item approach. Zabbix fetches the metrics payload once per minute, and all dependent items extract data from that single request, minimizing load on the Keycloak server.
 
-Production Ready: Includes pre-tuned triggers for database exhaustion, login latency, and system saturation.
+- Production Ready: Includes pre-tuned triggers for database exhaustion, login latency, and system saturation.
 
 ---
 
@@ -83,7 +83,7 @@ bin/kc.sh start-dev \
   --health-enabled=true \
   --metrics-enabled=true 
 ```
-This command starts Keycloak in development mode, which is optimized for local testing rather than production security.
+Note: The start-dev command is optimized for local testing. For production, ensure these flags are applied to your start command or configuration file.
 
 
 ### 🔍 Verification
@@ -97,9 +97,9 @@ Before installing the template, ensure you can access these URLs from your Zabbi
 
 ### 1. Import Template:
 
-- Go to **Data collection → Templates**.
-- Click **Import**.
-- Select **template_keycloak_http.json** and confirm.
+- Go to Data collection → Templates.
+- Click Import.
+- Select template_keycloak_http.json and confirm.
 
 ### 2. Add to Host:
 
@@ -107,7 +107,7 @@ Before installing the template, ensure you can access these URLs from your Zabbi
 - Add the Template App Keycloak by HTTP.
 - Ensure the Host Interface is set (Agent or SNMP interface is not strictly required, but Zabbix needs the IP/DNS to resolve {HOST.CONN}).
 
-### 3. Configure Macros (Optional):
+### 3. Configure Macros (Optional)
 
 This template uses the standard {HOST.CONN} macro to find your server. If your Keycloak uses a custom port or path, you can override these macros on the Host level:
 
@@ -116,6 +116,15 @@ This template uses the standard {HOST.CONN} macro to find your server. If your K
 | `{$KEYCLOAK.HEALTH.URL}`  | `http://{HOST.CONN}:9000/health`  | Keycloak health endpoint             |
 | `{$KEYCLOAK.METRICS.URL}` | `http://{HOST.CONN}:9000/metrics` | Keycloak Prometheus metrics endpoint |
 
+---
+
+### 📚 References & Technical Details
+
+This template leverages Zabbix Prometheus preprocessing to efficiently parse metrics. Instead of making multiple HTTP requests, the template makes a single request to the metrics endpoint and uses dependent items to extract values.
+
+* **Zabbix Prometheus Integration:** [Zabbix Documentation: Prometheus Checks](https://www.zabbix.com/documentation/current/en/manual/config/items/itemtypes/prometheus)
+* **Keycloak Observability Guide:** [Keycloak Documentation: Enabling Metrics](https://www.keycloak.org/guides#observability)
+* **Keycloak SLIs:** [Keycloak Service Level Indicators](https://www.keycloak.org/observability/keycloak-service-level-indicators)
 ---
 
 ## 🤝 Contributing
