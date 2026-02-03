@@ -74,7 +74,7 @@ This template comes with High Priority (Disaster) alerts to ensure immediate vis
 
 Keycloak does not expose metrics by default. You must enable them via CLI flags or Environment Variables.
 
-### CLI Flags
+#### CLI Flags
 
 When starting Keycloak:
 
@@ -95,19 +95,19 @@ Before installing the template, ensure you can access these URLs from your Zabbi
 
 ## ⚙️ Zabbix Configuration
 
-### 1. Import Template:
+#### 1. Import Template:
 
 - Go to Data collection → Templates.
 - Click Import.
 - Select template_keycloak_http.json and confirm.
 
-### 2. Add to Host:
+#### 2. Add to Host:
 
 - Create or Edit a Host in Zabbix.
 - Add the Template App Keycloak by HTTP.
 - Ensure the Host Interface is set (Agent or SNMP interface is not strictly required, but Zabbix needs the IP/DNS to resolve {HOST.CONN}).
 
-### 3. Configure Macros (Optional)
+#### 3. Configure Macros (Optional)
 
 This template uses the standard {HOST.CONN} macro to find your server. If your Keycloak uses a custom port or path, you can override these macros on the Host level:
 
@@ -118,7 +118,7 @@ This template uses the standard {HOST.CONN} macro to find your server. If your K
 
 ---
 
-### 📚 References & Technical Details
+## 📚 References & Technical Details
 
 This template leverages Zabbix Prometheus preprocessing to efficiently parse metrics. Instead of making multiple HTTP requests, the template makes a single request to the metrics endpoint and uses dependent items to extract values.
 
