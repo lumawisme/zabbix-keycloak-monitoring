@@ -1,0 +1,769 @@
+{
+    "zabbix_export": {
+        "version": "7.2",
+        "template_groups": [
+            {
+                "uuid": "a571c0d144b14fd4a87a9d9b2aa9fcd6",
+                "name": "Templates/Applications"
+            }
+        ],
+        "templates": [
+            {
+                "uuid": "e16434f1bd5f472ab705fac2cd51c2e6",
+                "template": "Template App Keycloak by HTTP",
+                "name": "Template App Keycloak by HTTP",
+                "description": "This template monitors Keycloak Identity and Access Management via the HTTP agent.\n\nIt fetches metrics from the built-in '/health' and '/metrics' endpoints.\n\nItems collected:\n- Service Status (Health Check)\n- System & Process Uptime\n- Database Connection Pool (Agroal): Active, Available, Awaiting, Leaks\n- JVM Performance: Heap/Non-Heap Memory, Metaspace, GC Pause Time, CPU Load\n- Thread States: Runnable, Blocked, Waiting\n- HTTP Traffic: Request rates and throughput\n- Infinispan Cache: Hit ratios, Rollbacks, and efficiency\n\nRequirements:\n===========\n- Keycloak must have health check enabled \n(CLI : \"--health-enabled=true\" or ENV: \"KC_HEALTH_ENABLED=true\").\n\n- Keycloak must have metrics enabled \n(CLI: \"--metrics-enabled=true\" or ENV: \"KC_METRICS_ENABLED=true\").\n\n- Zabbix Server/Proxy must have network access to the Keycloak metrics port (default 9000).",
+                "groups": [
+                    {
+                        "name": "Templates/Applications"
+                    }
+                ],
+                "items": [
+                    {
+                        "uuid": "2321dd40e3a845e4b8000bb2e5358323",
+                        "name": "Cache Hit Ratio %",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.cache.hit_ratio",
+                        "units": "%",
+                        "description": "Percentage of requests are served instantly from RAM.",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "vendor_cache_container_stats_hit_ratio",
+                                    "value",
+                                    ""
+                                ]
+                            },
+                            {
+                                "type": "MULTIPLIER",
+                                "parameters": [
+                                    "100"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "cache"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "de7bdcc23a294793bd75d389913597ea",
+                        "name": "DB Active Connections",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.db.active_count",
+                        "value_type": "FLOAT",
+                        "description": "Number of active connections. These connections are in use and not available to be acquired.",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "agroal_active_count",
+                                    "value",
+                                    ""
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "database"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "278f241b632740678b12b8fc90428333",
+                        "name": "DB Available Connections",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.db.available",
+                        "value_type": "FLOAT",
+                        "description": "Number of idle connections in the pool, available to be acquired.",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "agroal_available_count",
+                                    "value",
+                                    ""
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "database"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "04f254800a0643e095f6c56865018801",
+                        "name": "DB Threads Waiting",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.db.awaiting",
+                        "value_type": "FLOAT",
+                        "description": "How many threads are blocked waiting for a database connection. This should be 0.",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "agroal_awaiting_count",
+                                    "value",
+                                    ""
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "database"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "0733f5235b964b04837f28f8c4eb5aa5",
+                                "expression": "min(/Template App Keycloak by HTTP/keycloak.db.awaiting, 5m) > 0",
+                                "name": "Database Threads are Waiting",
+                                "opdata": "Value: {ITEM.LASTVALUE}",
+                                "priority": "DISASTER",
+                                "description": "Threads are queued up waiting for a database connection. This causes immediate slowness for users.",
+                                "manual_close": "YES"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "6f0e8d1ecc8e47ca8445bcb8a340f740",
+                        "name": "Max DB Blocking Time",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.db.block_time_max",
+                        "value_type": "FLOAT",
+                        "units": "ms",
+                        "description": "The longest time a thread had to wait for a DB connection. High spikes indicate DB slowness.",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "agroal_blocking_time_max_milliseconds",
+                                    "value",
+                                    ""
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "database"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "2f7e70eeb35c4ce5bfe4dd48972532cb",
+                                "expression": "min(/Template App Keycloak by HTTP/keycloak.db.block_time_max, 5m) > 1000",
+                                "name": "High Database Blocking Time",
+                                "opdata": "Value: {ITEM.LASTVALUE}",
+                                "priority": "DISASTER",
+                                "description": "It is taking too long to get a connection",
+                                "manual_close": "YES"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "6d89f31e70ab4c44bb9ee7d128501471",
+                        "name": "DB Pool Utilization",
+                        "type": "CALCULATED",
+                        "key": "keycloak.db.utilization",
+                        "delay": "5m",
+                        "value_type": "FLOAT",
+                        "units": "%",
+                        "params": "100 * last(//keycloak.db.active_count) / ( last(//keycloak.db.active_count) + last(//keycloak.db.available) )",
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "database"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "fa81533c28c64a879c0aefbd9cc4ca4e",
+                                "expression": "min(/Template App Keycloak by HTTP/keycloak.db.utilization, 5m) > 90",
+                                "name": "Database Connection Pool is almost full",
+                                "opdata": "Value: {ITEM.LASTVALUE}",
+                                "priority": "DISASTER",
+                                "description": "The pool is almost full (>90%). New connections might be rejected soon.",
+                                "manual_close": "YES"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "550f649268724107a3c41995a0e6d7d4",
+                        "name": "Get All Metrics",
+                        "type": "HTTP_AGENT",
+                        "key": "keycloak.get_metrics",
+                        "delay": "5m",
+                        "history": "7d",
+                        "value_type": "TEXT",
+                        "description": "bin/kc.[sh|bat] start --metrics-enabled=true",
+                        "preprocessing": [
+                            {
+                                "type": "JAVASCRIPT",
+                                "parameters": [
+                                    "// Replace all instances of \\\" with a single quote ' to fix Zabbix parsing error\nreturn value.replace(/\\\\\"/g, \"'\");"
+                                ]
+                            }
+                        ],
+                        "url": "{$KEYCLOAK.METRICS.URL}",
+                        "triggers": [
+                            {
+                                "uuid": "3cdeb3ae42bc42d39239efea9ee45c7b",
+                                "expression": "nodata(/Template App Keycloak by HTTP/keycloak.get_metrics,5m)=1",
+                                "name": "Failed to fetch metrics (Endpoint unreachable)",
+                                "priority": "DISASTER",
+                                "description": "Fires if no data is received for 5 minutes.",
+                                "manual_close": "YES"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "aa408da85e194316ba8595aa90bfee12",
+                        "name": "Keycloak Health Status",
+                        "type": "HTTP_AGENT",
+                        "key": "keycloak.health.status",
+                        "delay": "5m",
+                        "value_type": "CHAR",
+                        "description": "Check if an instance has finished its start up and is ready to serve requests by calling its health REST endpoints.",
+                        "preprocessing": [
+                            {
+                                "type": "JSONPATH",
+                                "parameters": [
+                                    "$.body.status"
+                                ]
+                            }
+                        ],
+                        "url": "{$KEYCLOAK.HEALTH.URL}",
+                        "headers": [
+                            {
+                                "name": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "output_format": "JSON",
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "health"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "9fd9d6f1d41d4d94aa277a1238686e28",
+                                "expression": "last(/Template App Keycloak by HTTP/keycloak.health.status)<>\"UP\" or nodata(/Template App Keycloak by HTTP/keycloak.health.status, 3m)=1",
+                                "name": "Keycloak Health Check is DOWN",
+                                "opdata": "Value: {ITEM.LASTVALUE}",
+                                "priority": "DISASTER",
+                                "description": "Alerts immediately if the health check endpoint returns anything other than \"UP\".",
+                                "manual_close": "YES"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "ea5e1b1a2a6a4c95aed7bfaa2531490c",
+                        "name": "Active HTTP Requests",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.http.requests.active",
+                        "value_type": "FLOAT",
+                        "description": "The number of requests currently being processed by the server.",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "http_server_active_requests",
+                                    "function",
+                                    "sum"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "http"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "10e1a1cc4c05455c83f985b2e7fd402a",
+                        "name": "JVM CPU Load",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.jvm.cpu_load",
+                        "value_type": "FLOAT",
+                        "units": "%",
+                        "description": "The \"recent cpu usage\" for the Java Virtual Machine process\n\nThe CPU usage specifically for Keycloak\n\nValue 0-1. Multiply by 100 for %.",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "process_cpu_usage",
+                                    "value",
+                                    ""
+                                ]
+                            },
+                            {
+                                "type": "MULTIPLIER",
+                                "parameters": [
+                                    "100"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "jvm"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "df34ff864bc64cddbf3cc7a4e82b13ce",
+                                "expression": "min(/Template App Keycloak by HTTP/keycloak.jvm.cpu_load,5)>90",
+                                "name": "High JVM CPU Load",
+                                "opdata": "Value: {ITEM.LASTVALUE}",
+                                "priority": "DISASTER",
+                                "description": "CPU is consistently saturated.",
+                                "manual_close": "YES"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "70c5be7d16b04f978957f5b417d99365",
+                        "name": "JVM GC Pause Time",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.jvm.gc.pause",
+                        "value_type": "FLOAT",
+                        "units": "s",
+                        "description": "Total time spent in Garbage Collection.",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "jvm_gc_pause_seconds_sum",
+                                    "function",
+                                    "sum"
+                                ]
+                            },
+                            {
+                                "type": "CHANGE_PER_SECOND"
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "jvm"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "a4ede496d95c42d582fb8ae01f3b59e0",
+                        "name": "JVM Heap Memory Used",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.jvm.memory.used",
+                        "value_type": "FLOAT",
+                        "units": "B",
+                        "description": "Java memory usage",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "jvm_memory_used_bytes{area=\"heap\"}",
+                                    "function",
+                                    "sum"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "jvm"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "d8a563ff8d6d4f4d990d5f6d15ca2853",
+                        "name": "JVM Non-Heap Memory Used",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.jvm.nonheap.used",
+                        "value_type": "FLOAT",
+                        "units": "B",
+                        "description": "This monitors memory used by Metaspace and code caches (separate from the main Heap).",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "base_memory_usedNonHeap_bytes",
+                                    "value",
+                                    ""
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "jvm"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "ca0ffdec41ba451fbf3668e033e3e502",
+                        "name": "Login Errors Rate",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.login.errors.rate",
+                        "value_type": "FLOAT",
+                        "units": "rps",
+                        "description": "This counts only the failed requests to login pages.\n\n\nRef: https://www.keycloak.org/observability/keycloak-service-level-indicators",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "http_server_requests_seconds_count{uri=~\"/realms/.*/protocol/.*|/realms/.*/login-actions.*\", outcome=\"SERVER_ERROR\"}",
+                                    "function",
+                                    "sum"
+                                ],
+                                "error_handler": "CUSTOM_VALUE",
+                                "error_handler_params": "0"
+                            },
+                            {
+                                "type": "CHANGE_PER_SECOND"
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "http"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "f324819fe58e4049981f3f609252b3bf",
+                        "name": "Login Error Ratio %",
+                        "type": "CALCULATED",
+                        "key": "keycloak.login.error_ratio",
+                        "value_type": "FLOAT",
+                        "units": "%",
+                        "params": "100 * ( last(//keycloak.login.errors.rate) / ( last(//keycloak.login.requests.rate) + (last(//keycloak.login.requests.rate)=0) ) )",
+                        "description": "This performs the math: (Errors / Total) * 100.\n\n + (...=0) prevents a \"Division by Zero\" error in Zabbix if there is absolutely no traffic on the login page.\n\nRef: https://www.keycloak.org/observability/keycloak-service-level-indicators",
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "http"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "6faa231338064b2d80fea2d7899c69e8",
+                                "expression": "min(/Template App Keycloak by HTTP/keycloak.login.error_ratio, 5m) > 5",
+                                "name": "High Login Error Rate (>5%)",
+                                "opdata": "Value: {ITEM.LASTVALUE}",
+                                "priority": "DISASTER",
+                                "description": "The ratio of 500/Server Errors on login pages has been above 5% for the last 5 minutes.",
+                                "manual_close": "YES"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "8227fa20327c4e079db0b81d03617c68",
+                        "name": "Login Requests Rate",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.login.requests.rate",
+                        "value_type": "FLOAT",
+                        "units": "rps",
+                        "description": "This counts all requests to login pages.\n\nRef: https://www.keycloak.org/observability/keycloak-service-level-indicators",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "http_server_requests_seconds_count{uri=~\"/realms/.*/protocol/.*|/realms/.*/login-actions.*\"}",
+                                    "function",
+                                    "sum"
+                                ],
+                                "error_handler": "CUSTOM_VALUE",
+                                "error_handler_params": "0"
+                            },
+                            {
+                                "type": "CHANGE_PER_SECOND"
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "http"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "44d4b5f0485a47058d88d6758af0863c",
+                        "name": "Max Login Response Time",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.login.response_time.max",
+                        "value_type": "FLOAT",
+                        "units": "s",
+                        "description": "This metric tracks the single slowest request in the last interval).\n\n\nRef: https://www.keycloak.org/observability/keycloak-service-level-indicators",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "http_server_requests_seconds_max{uri=~\"/realms/.*/protocol/.*|/realms/.*/login-actions.*\"}",
+                                    "function",
+                                    "max"
+                                ],
+                                "error_handler": "CUSTOM_VALUE",
+                                "error_handler_params": "0"
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "http"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "d8a8515b646c49fa91197589aedacb7d",
+                                "expression": "min(/Template App Keycloak by HTTP/keycloak.login.response_time.max, 5m) > 0.25",
+                                "name": "Login Response Time is High (>250ms)",
+                                "opdata": "Value: {ITEM.LASTVALUE}",
+                                "priority": "DISASTER",
+                                "description": "The maximum response time for login requests has consistently exceeded 250ms for the last 5 minutes.\n\nRef: https://www.keycloak.org/observability/keycloak-service-level-indicators",
+                                "manual_close": "YES"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "0c25a2a933cb46eaa5e3fbafcb814f0a",
+                        "name": "System CPU Usage",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.system.cpu",
+                        "value_type": "FLOAT",
+                        "units": "%",
+                        "description": "The \"recent cpu usage\" of the system the application is running in\n\nValue 0-1. Multiply by 100 for %.",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "system_cpu_usage",
+                                    "value",
+                                    ""
+                                ]
+                            },
+                            {
+                                "type": "MULTIPLIER",
+                                "parameters": [
+                                    "100"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "system"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "fd001f6a80ef43d39af7b5600be2958d",
+                                "expression": "min(/Template App Keycloak by HTTP/keycloak.system.cpu, 5m) > 90",
+                                "name": "High System CPU Load",
+                                "opdata": "Value: {ITEM.LASTVALUE}",
+                                "priority": "DISASTER",
+                                "description": "CPU is consistently saturated.",
+                                "manual_close": "YES"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "83567fc95d284e1e9cd214a64f693635",
+                        "name": "JVM Blocked Threads",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.threads.blocked",
+                        "value_type": "FLOAT",
+                        "description": "If this grows > 0, server is overloaded and cannot process tasks fast enough.",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "jvm_threads_states_threads{state=\"blocked\",}",
+                                    "value",
+                                    ""
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "threads"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "0c5e128eac464bfe8b02b9a5369b1435",
+                                "expression": "min(/Template App Keycloak by HTTP/keycloak.threads.blocked, 5m) > 2",
+                                "name": "JVM Blocked Threads Detected",
+                                "opdata": "Value: {ITEM.LASTVALUE}",
+                                "priority": "DISASTER",
+                                "description": "Threads are stuck waiting on locks. If this number rises, the application is freezing.",
+                                "manual_close": "YES"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "f0cbd4282220451386d811cf3328c532",
+                        "name": "Current Thread Count",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.threads.current",
+                        "value_type": "FLOAT",
+                        "description": "Total number of Java threads. Sudden drops or spikes can indicate crashes or loops.",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "base_thread_count",
+                                    "value",
+                                    ""
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "threads"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "b80586ee55d346b08148a50c68cd43e6",
+                        "name": "JVM Runnable Threads",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.threads.state.runnable",
+                        "value_type": "FLOAT",
+                        "description": "Threads that are actively working or waiting for CPU time.",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "jvm_threads_states_threads{state=\"runnable\"}",
+                                    "value",
+                                    ""
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "threads"
+                            }
+                        ]
+                    },
+                    {
+                        "uuid": "1a3639597fb747b48baaf2795ed404ea",
+                        "name": "Process Uptime",
+                        "type": "DEPENDENT",
+                        "key": "keycloak.uptime",
+                        "value_type": "FLOAT",
+                        "units": "s",
+                        "description": "The uptime of the Java virtual machine",
+                        "preprocessing": [
+                            {
+                                "type": "PROMETHEUS_PATTERN",
+                                "parameters": [
+                                    "process_uptime_seconds",
+                                    "value",
+                                    ""
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "keycloak.get_metrics"
+                        },
+                        "tags": [
+                            {
+                                "tag": "component",
+                                "value": "health"
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "uuid": "2c1a78edfbd849efb1d33706b02ef4a8",
+                                "expression": "last(/Template App Keycloak by HTTP/keycloak.uptime) < 600",
+                                "name": "Process has restarted",
+                                "opdata": "Value: {ITEM.LASTVALUE}",
+                                "priority": "DISASTER",
+                                "description": "Alerts if the uptime resets (value is less than 10 minutes), indicating a crash or restart.",
+                                "manual_close": "YES"
+                            }
+                        ]
+                    }
+                ],
+                "macros": [
+                    {
+                        "macro": "{$KEYCLOAK.HEALTH.URL}",
+                        "value": "http://{HOST.CONN}:9000/health",
+                        "description": "Keycloak must have health check enabled  (CLI : \"--health-enabled=true\" or ENV: \"KC_HEALTH_ENABLED=true\")."
+                    },
+                    {
+                        "macro": "{$KEYCLOAK.METRICS.URL}",
+                        "value": "http://{HOST.CONN}:9000/metrics",
+                        "description": "Keycloak must have metrics enabled  (CLI: \"--metrics-enabled=true\" or ENV: \"KC_METRICS_ENABLED=true\")."
+                    }
+                ]
+            }
+        ]
+    }
+}
