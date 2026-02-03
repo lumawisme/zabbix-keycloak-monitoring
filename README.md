@@ -65,7 +65,7 @@ All triggers use stability windows to minimize alert noise.
 Keycloak must be configured to expose its observability endpoints.
 **Note:** This template is designed for the **Quarkus** distribution of Keycloak.
 
-You must start Keycloak with the following flags or environment variables. The `http-metrics-slos` setting is **required** for the Latency SLI trigger to work correctly.
+You must start Keycloak with the following flags or environment variables.
 
 **Option A: CLI Flags**
 ```bash
@@ -142,7 +142,7 @@ This design minimizes the HTTP load on both Zabbix and Keycloak.
 - Threshold tuning
 - Dashboard ideas
 - Compatibility improvements
-Feel free to open an issue or submit a pull request.
+- Feel free to open an issue or submit a pull request.
 
 ---
 
