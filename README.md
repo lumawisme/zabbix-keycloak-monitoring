@@ -131,7 +131,6 @@ This template leverages Zabbix Prometheus preprocessing to efficiently parse met
 - Contributions are welcome!
 - Bug reports
 - New metric suggestions
-- Threshold tuning
 
 ---
 
