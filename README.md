@@ -137,9 +137,3 @@ This template leverages Zabbix Prometheus preprocessing to efficiently parse met
 
 ## 📄 License
 - MIT License
-  
----
-
-## ⭐ Credits
-Created and maintained by Lu Maw.
-Inspired by Keycloak observability SLIs and production requirements.
