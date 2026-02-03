@@ -17,7 +17,7 @@ This template utilizes Keycloak's built-in observability endpoints (/health and 
 ---
 
 ## 🛠 Tested With
-- Keycloak 20+ (Quarkus) running on RHEL 8.9 (Ootpa)
+- Keycloak 26.5.1 (Quarkus) running on RHEL 8.9 (Ootpa)
 - Zabbix 7.2.1
 
 ---
