@@ -2,7 +2,7 @@
 
 A comprehensive, efficient Zabbix HTTP Agent template for monitoring Keycloak Identity and Access Management.
 
-This template utilizes Keycloak's built-in observability endpoints (/health and /metrics) to provide deep visibility into system health, database connection pools (Agroal), JVM performance, and critical Login Service Level Indicators (SLIs).
+This template utilizes Keycloak's built-in observability endpoints (/health and /metrics) to provide deep visibility into system health, database connection pools, JVM performance, and critical Login Service Level Indicators (SLIs).
 
 ---
 
@@ -29,7 +29,7 @@ This template utilizes Keycloak's built-in observability endpoints (/health and 
 - Uptime: Process uptime tracking with automatic restart detection.
 - Service Reliability: Monitors the availability of the metrics endpoint itself.
 
-### 🗄️ Database (Agroal)
+### 🗄️ Database
 - Connection Pool: Active, Available, and Awaiting connections.
 - Performance: Maximum blocking time (latency in acquiring a connection).
 - Utilization: Calculated percentage of pool usage.
@@ -47,7 +47,7 @@ Metrics specifically tuned to track user experience based on Keycloak's observab
 - Errors: Login error rate and calculated Error Ratio (%).
 - Latency: Maximum response time for login requests.
 
-### 🧠 Cache (Infinispan)
+### 🧠 Cache
 - Efficiency: Cache Hit Ratio %.
 
 ---
