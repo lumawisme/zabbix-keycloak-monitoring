@@ -6,7 +6,7 @@ This template utilizes Keycloak's built-in observability endpoints (/health and 
 
 ---
 
-## 🚀 Features
+##  Features
 
 - Zero-Dependency: Uses Zabbix's native HTTP Agent. No external scripts or Zabbix Senders required.
 
@@ -16,43 +16,43 @@ This template utilizes Keycloak's built-in observability endpoints (/health and 
 
 ---
 
-## 🛠 Tested With
+##  Tested With
 - Keycloak 26.5.1 (Quarkus) running on RHEL 8.9 (Ootpa)
 - Zabbix 7.2.1
 
 ---
 
-## 📊 Monitored Metrics
+##  Monitored Metrics
 
-### 🔍 Health & Availability
+###  Health & Availability
 - Global Status: Application health check (/health).
 - Uptime: Process uptime tracking with automatic restart detection.
 - Service Reliability: Monitors the availability of the metrics endpoint itself.
 
-### 🗄️ Database
+###  Database
 - Connection Pool: Active, Available, and Awaiting connections.
 - Performance: Maximum blocking time (latency in acquiring a connection).
 - Utilization: Calculated percentage of pool usage.
 
-### ☕ JVM Performance
+###  JVM Performance
 - Memory: Heap and Non-Heap (Metaspace) usage in Bytes.
 - CPU: Process-specific CPU load and System-wide CPU load.
 - Garbage Collection: Total GC pause time.
 - Threads: Runnable, Blocked, and Total thread counts.
 
-### 🌐 HTTP & Login SLIs
+###  HTTP & Login SLIs
 Metrics specifically tuned to track user experience based on Keycloak's observability guide.
 - Traffic: Global Active HTTP requests.
 - Login Rates: Requests per second (RPS) to login flows.
 - Errors: Login error rate and calculated Error Ratio (%).
 - Latency: Maximum response time for login requests.
 
-### 🧠 Cache
+###  Cache
 - Efficiency: Cache Hit Ratio %.
 
 ---
 
-## 🚨 Triggers & Alerts
+##  Triggers & Alerts
 
 This template comes with High Priority (Disaster) alerts to ensure immediate visibility into critical failures.
 
@@ -70,7 +70,7 @@ This template comes with High Priority (Disaster) alerts to ensure immediate vis
 
 ---
 
-## 🧩 Keycloak Configuration requirements
+##  Keycloak Configuration requirements
 
 Keycloak does not expose metrics by default. You must enable them via CLI flags or Environment Variables.
 
@@ -84,14 +84,14 @@ bin/kc.sh start-dev \
 Note: The start-dev command is optimized for local testing. For production, ensure these flags are applied to your start command or configuration file.
 
 
-### 🔍 Verification
+###  Verification
 Before installing the template, ensure you can access these URLs from your Zabbix Proxy/Server:
 - http://your-keycloak-ip:9000/health
 - http://your-keycloak-ip:9000/metrics
 
 ---
 
-## ⚙️ Zabbix Configuration
+##  Zabbix Configuration
 
 #### 1. Import Template:
 
@@ -116,7 +116,7 @@ This template uses the standard {HOST.CONN} macro to find your server. If your K
 
 ---
 
-## 📚 References & Technical Details
+##  References & Technical Details
 
 This template leverages Zabbix Prometheus preprocessing to efficiently parse metrics. Instead of making multiple HTTP requests, the template makes a single request to the metrics endpoint and uses dependent items to extract values.
 
@@ -125,12 +125,12 @@ This template leverages Zabbix Prometheus preprocessing to efficiently parse met
 * **Keycloak SLIs:** [Keycloak Service Level Indicators](https://www.keycloak.org/observability/keycloak-service-level-indicators)
 ---
 
-## 🤝 Contributing
+##  Contributing
 - Contributions are welcome!
 - Bug reports
 - New metric suggestions
 
 ---
 
-## 📄 License
+##  License
 - MIT License
